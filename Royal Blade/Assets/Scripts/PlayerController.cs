@@ -12,19 +12,33 @@ public class PlayerController : MonoBehaviour
     public Animator anim;
 
     [Header("Player Setting")]
+    public Rigidbody rb;
     public int health;
+
+    [Header("Attack")]
     public float attackDamage;
     public float attackSpeed;
+    public float attackGageValue;
     public int attackCombo;
-    public float runSpeed;
     public bool isAttack;
-    public bool isShield;
+
+    [Header("Run")]
+    public float runSpeed;
+    // public float runCoolTime;
+    public float runMinPower;
+    public float runMaxPower;
+    public float runPower;
     public bool isRun;
+    public bool isGround;
+
+    [Header("Shield")]
+    public bool isShield;
 
     [Header("Attack Collider")]
     public SphereCollider sc;
     public float firstRadius;
     public float attackRadius;
+    public float shieldRadius;
 
 
     void Awake()
@@ -63,11 +77,36 @@ public class PlayerController : MonoBehaviour
             Attack();
             StartCoroutine(AttackDelay());
         }
-        else if(Input.GetKeyDown(KeyCode.LeftShift))
+        else if(Input.GetKeyDown(KeyCode.LeftShift) && !isRun && isGround)
         {
             RunForward();
         }
-        else if(Input.GetKeyDown(KeyCode.A))
+        else if(Input.GetKeyDown(KeyCode.A) && !isShield)
+        {
+            Shield();
+        }
+    }
+
+    public void OnClickAttackBtn()
+    {
+        if (!isAttack)
+        {
+            Attack();
+            StartCoroutine(AttackDelay());
+        }
+    }
+
+    public void OnClickRunForwardkBtn()
+    {
+        if (!isRun && isGround)
+        {
+            RunForward();
+        }
+    }
+
+    public void OnClickShieldkBtn()
+    {
+        if (!isShield)
         {
             Shield();
         }
@@ -105,6 +144,30 @@ public class PlayerController : MonoBehaviour
     void RunForward()
     {
         fsm.SetState("RunForward");
+        rb.AddForce(-Vector3.back * runPower, ForceMode.Impulse);
+    }
+
+    public void ChangeStateToIdle()
+    {
+        fsm.SetState("Idle");
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            Debug.Log("Collision Ground");
+            isRun = false;
+            isGround = true;
+        }
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGround = false;
+        }
     }
 
 }

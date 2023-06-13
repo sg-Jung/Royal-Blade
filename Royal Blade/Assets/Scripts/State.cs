@@ -87,6 +87,8 @@ public class ShieldState : State
     public override void Enter()
     {
         _playerController.anim.SetBool("IsShield", true);
+        _playerController.isShield = true;
+        _playerController.sc.radius = _playerController.shieldRadius;
     }
 
     public override void Update()
@@ -96,7 +98,8 @@ public class ShieldState : State
 
     public override void Exit()
     {
-
+        _playerController.isShield = false;
+        _playerController.sc.radius = _playerController.firstRadius;
     }
 }
 
@@ -106,6 +109,7 @@ public class RunForwardState : State
 
     public override void Enter()
     {
+        _playerController.isRun = true;
         _playerController.anim.SetBool("IsRun", true);
         _playerController.anim.SetFloat("RunSpeed", PlayerController.Instance.runSpeed);
     }
@@ -117,6 +121,6 @@ public class RunForwardState : State
 
     public override void Exit()
     {
-
+        _playerController.isRun = false;
     }
 }
