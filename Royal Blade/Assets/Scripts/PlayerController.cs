@@ -20,11 +20,9 @@ public class PlayerController : MonoBehaviour
     public float runSpeed;
 
     [Header("Attack Collider")]
-    public BoxCollider bc;
-    public Vector3 firstCenter;
-    public Vector3 firstSize;
-    public Vector3 attackCenter;
-    public Vector3 attackSize;
+    public SphereCollider sc;
+    public float firstRadius;
+    public float attackRadius;
 
 
     void Awake()
@@ -53,8 +51,7 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
-        bc.center = firstCenter;
-        bc.size = firstSize;
+        sc.radius = firstRadius;
     }
 
     void Update()
@@ -93,11 +90,9 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator AttackDelay()
     {
-        bc.center = attackCenter;
-        bc.size = attackSize;
+        sc.radius = attackRadius;
         yield return new WaitForSeconds(1 / attackSpeed);
-        bc.center = firstCenter;
-        bc.size = firstSize;
+        sc.radius = firstRadius;
         isAttackDelay = false;
     }
 
