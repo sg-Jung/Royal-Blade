@@ -42,8 +42,9 @@ public class Attack0State : State
 
     public override void Enter()
     {
-        PlayerController.Instance.anim.SetBool("IsAttack", true);
-        PlayerController.Instance.anim.SetFloat("AttackSpeed", PlayerController.Instance.attackSpeed);
+        _playerController.anim.SetBool("IsAttack", true);
+        _playerController.anim.SetFloat("AttackSpeed", _playerController.attackSpeed);
+        _playerController.isAttack = true;
     }
 
     public override void Update()
@@ -53,7 +54,7 @@ public class Attack0State : State
 
     public override void Exit()
     {
-
+        _playerController.isAttack = false;
     }
 }
 
@@ -63,8 +64,9 @@ public class Attack1State : State
 
     public override void Enter()
     {
-        PlayerController.Instance.anim.SetBool("IsAttack", true);
-        PlayerController.Instance.anim.SetFloat("AttackSpeed", PlayerController.Instance.attackSpeed);
+        _playerController.anim.SetBool("IsAttack", true);
+        _playerController.anim.SetFloat("AttackSpeed", _playerController.attackSpeed);
+        _playerController.isAttack = true;
     }
 
     public override void Update()
@@ -74,7 +76,7 @@ public class Attack1State : State
 
     public override void Exit()
     {
-
+        _playerController.isAttack = false;
     }
 }
 
@@ -84,7 +86,7 @@ public class ShieldState : State
 
     public override void Enter()
     {
-        PlayerController.Instance.anim.SetBool("IsShield", true);
+        _playerController.anim.SetBool("IsShield", true);
     }
 
     public override void Update()
@@ -104,8 +106,8 @@ public class RunForwardState : State
 
     public override void Enter()
     {
-        PlayerController.Instance.anim.SetBool("IsRun", true);
-        PlayerController.Instance.anim.SetFloat("RunSpeed", PlayerController.Instance.runSpeed);
+        _playerController.anim.SetBool("IsRun", true);
+        _playerController.anim.SetFloat("RunSpeed", PlayerController.Instance.runSpeed);
     }
 
     public override void Update()

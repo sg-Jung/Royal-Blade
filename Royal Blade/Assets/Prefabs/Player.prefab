@@ -51,13 +51,13 @@ MonoBehaviour:
   anim: {fileID: 1894031121310695605}
   health: 3
   attackDamage: 10
-  attackSpeed: 2
+  attackSpeed: 2.5
   isAttackDelay: 0
   attackCombo: 0
   runSpeed: 10
-  sc: {fileID: 0}
-  firstRadius: 0
-  attackRadius: 0
+  sc: {fileID: 5749950337197802193}
+  firstRadius: 1
+  attackRadius: 4
 --- !u!54 &86242559
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -72,7 +72,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 118
   m_CollisionDetection: 0
 --- !u!135 &5749950337197802193
 SphereCollider:
@@ -82,11 +82,11 @@ SphereCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 497617059548181781}
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Radius: 1
+  m_Center: {x: 0, y: 0.5, z: 0}
 --- !u!1 &497617060424182942
 GameObject:
   m_ObjectHideFlags: 0
@@ -112,14 +112,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 497617060424182942}
-  m_LocalRotation: {x: 0.14772715, y: -0, z: -0, w: 0.98902816}
-  m_LocalPosition: {x: -0.11, y: 1.82, z: -2.7}
+  m_LocalRotation: {x: 0.22166552, y: -0, z: -0, w: 0.9751228}
+  m_LocalPosition: {x: -0.11000013, y: 3.647, z: -3.4240003}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 497617059548181780}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 16.99, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 25.614, y: 0, z: 0}
 --- !u!20 &497617060424182940
 Camera:
   m_ObjectHideFlags: 0
@@ -298,6 +298,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3382ada41b60a694985e78145bdf403a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!65 &1832816884
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1894031121320194825}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 2.3173242, y: 1.4683669, z: 2.3646011}
+  m_Center: {x: -0.079683065, y: 0.73418343, z: 0.056784153}
 --- !u!4 &1894031121320292201 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2066896392038131574, guid: 45288819fde2143449a96207b14db0bb, type: 3}

@@ -8,7 +8,8 @@ public class Obstacle : MonoBehaviour
     public Rigidbody rb;
     public BoxCollider bc;
     public float health;
-    public float knockBackForce;
+    public float shieldKnockBackForce;
+    public float attackKnockBackForce;
 
     void Start()
     {
@@ -27,7 +28,7 @@ public class Obstacle : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player") && PlayerController.Instance.isAttackDelay)
+        if (other.CompareTag("Player") && PlayerController.Instance.isAttack)
         {
             Debug.Log("Hit Player Trigger");
 
@@ -39,8 +40,9 @@ public class Obstacle : MonoBehaviour
             }
             else
             {
-                Debug.Log("KnockBack");
-                rb.AddForce(-Vector3.back * knockBackForce, ForceMode.Impulse);
+                Debug.Log("attackKnockBackForce");
+                // 여기서 addForce가 아니라 박스 콜라이더 안에 있는 모든 장애물을 검출해 검출된 모든 오브젝트에 addForce를 주도록 구현
+                rb.AddForce(-Vector3.back * attackKnockBackForce, ForceMode.Impulse);
             }
         }
     }

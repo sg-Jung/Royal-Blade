@@ -15,9 +15,11 @@ public class PlayerController : MonoBehaviour
     public int health;
     public float attackDamage;
     public float attackSpeed;
-    public bool isAttackDelay;
     public int attackCombo;
     public float runSpeed;
+    public bool isAttack;
+    public bool isShield;
+    public bool isRun;
 
     [Header("Attack Collider")]
     public SphereCollider sc;
@@ -56,9 +58,8 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && !isAttackDelay)
+        if (Input.GetKeyDown(KeyCode.Space) && !isAttack)
         {
-            isAttackDelay = true;
             Attack();
             StartCoroutine(AttackDelay());
         }
@@ -93,7 +94,7 @@ public class PlayerController : MonoBehaviour
         sc.radius = attackRadius;
         yield return new WaitForSeconds(1 / attackSpeed);
         sc.radius = firstRadius;
-        isAttackDelay = false;
+        isAttack = false;
     }
 
     void Shield()
