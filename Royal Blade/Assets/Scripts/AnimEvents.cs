@@ -13,4 +13,9 @@ public class AnimEvents : MonoBehaviour
     {
         PlayerController.Instance.anim.SetBool("IsShield", false);
     }
+
+    public void OnFinishedRunForward()
+    {
+        PlayerController.Instance.anim.SetBool("IsRun", false);
+    }
 }

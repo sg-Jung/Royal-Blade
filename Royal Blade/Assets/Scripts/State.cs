@@ -36,13 +36,14 @@ public class IdleState : State
     }
 }
 
-public class Attack1State : State
+public class Attack0State : State
 {
-    public Attack1State(PlayerController playerController) : base(playerController) { }
+    public Attack0State(PlayerController playerController) : base(playerController) { }
 
     public override void Enter()
     {
-
+        PlayerController.Instance.anim.SetBool("IsAttack", true);
+        PlayerController.Instance.anim.SetFloat("AttackSpeed", PlayerController.Instance.attackSpeed);
     }
 
     public override void Update()
@@ -56,13 +57,14 @@ public class Attack1State : State
     }
 }
 
-public class Attack2State : State
+public class Attack1State : State
 {
-    public Attack2State(PlayerController playerController) : base(playerController) { }
+    public Attack1State(PlayerController playerController) : base(playerController) { }
 
     public override void Enter()
     {
-
+        PlayerController.Instance.anim.SetBool("IsAttack", true);
+        PlayerController.Instance.anim.SetFloat("AttackSpeed", PlayerController.Instance.attackSpeed);
     }
 
     public override void Update()
@@ -82,7 +84,7 @@ public class ShieldState : State
 
     public override void Enter()
     {
-
+        PlayerController.Instance.anim.SetBool("IsShield", true);
     }
 
     public override void Update()
@@ -102,7 +104,8 @@ public class RunForwardState : State
 
     public override void Enter()
     {
-
+        PlayerController.Instance.anim.SetBool("IsRun", true);
+        PlayerController.Instance.anim.SetFloat("RunSpeed", PlayerController.Instance.runSpeed);
     }
 
     public override void Update()
