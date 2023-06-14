@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -21,6 +22,7 @@ public class UIManager : MonoBehaviour
     float runMaxValue;
 
     [Header("Image")]
+    public Image shieldImage;
     public Image attackSkillImage;
     public Image runSkillImage;
     float runImgGage = 0f;
@@ -54,7 +56,6 @@ public class UIManager : MonoBehaviour
     private void Update()
     {
         runForwardBtn.interactable = !PlayerController.Instance.isRun;
-        shieldBtn.interactable = !PlayerController.Instance.isShield;
 
         ManageSkillBtn();
     }
@@ -102,12 +103,69 @@ public class UIManager : MonoBehaviour
 
     public void RunSkillBtnClicked()
     {
-
+        PlayerController.Instance.OnClickRunSkillBtn();
     }
 
-    public void AttackImageFill(float attackGageValue)
+    public void AttackSkillBtnClicked()
+    {
+        PlayerController.Instance.OnClickAttackSkillBtn();
+        StartCoroutine(AttackSkillLossAmount());
+        attackSkillBtn.interactable = false;
+    }
+
+    IEnumerator AttackSkillLossAmount()
+    {
+        float wholeDuration = PlayerController.Instance.wholeAttackSkillDuration;
+        float time = wholeDuration;
+
+        Image attackImg = attackBtn.GetComponent<Image>();
+        
+        Color orginColor = attackImg.color;
+        attackImg.color = Color.blue;
+
+        while (time > 0f)
+        {
+            time -= Time.deltaTime;
+            float fillAmount = Mathf.Lerp(0f, 1f, time / wholeDuration);
+            attackSkillImage.fillAmount = fillAmount;
+
+            yield return null;
+        }
+
+        attackImg.color = orginColor;
+    }
+
+    public void ShieldBtnClicked()
+    {
+        float coolTime = PlayerController.Instance.shieldCoolTime;
+        shieldImage.fillAmount = 0f;
+        shieldBtn.interactable = false;
+
+        StartCoroutine(ShieldBtnFillCor(coolTime));
+        PlayerController.Instance.OnClickShieldkBtn();
+    }
+
+    IEnumerator ShieldBtnFillCor(float coolTime)
+    {
+        float time = 0f;
+
+        while(coolTime > time)
+        {
+            time += Time.deltaTime;
+            float fillAmount = Mathf.Lerp(0f, 1f, time / coolTime);
+            shieldImage.fillAmount = fillAmount;
+
+            yield return null;
+        }
+
+        shieldBtn.interactable = true;
+    }
+
+    public void AttackSkillImageFill(float attackGageValue)
     {
         attackSkillImage.fillAmount = Mathf.Clamp01(attackSkillImage.fillAmount + attackGageValue);
+        
+        if (attackSkillImage.fillAmount == 1) attackSkillBtn.interactable = true;
     }
 
 }

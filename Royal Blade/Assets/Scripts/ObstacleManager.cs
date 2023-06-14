@@ -14,7 +14,11 @@ public class ObstacleManager : MonoBehaviour
 
     private List<GameObject> poolObjects = new List<GameObject>();
 
-    float health;
+    [Header("Obstacle Info")]
+    public AudioSource audioSrc;
+    public int obstacleScore;
+    public float health;
+    public float maxHealth;
 
     [Header("Obstacle Area & Obstacle Spawn Point")]
     public BoxCollider obsArea;
@@ -26,7 +30,7 @@ public class ObstacleManager : MonoBehaviour
     public float spawnTime;
     public int spawnMinCount;
     public int spawnMaxCount;
-    public int spawnCount;
+    public int curSpawnCount;
 
     enum State { Attack, Shield }
 
@@ -45,8 +49,6 @@ public class ObstacleManager : MonoBehaviour
 
     void Start()
     {
-        health = obstaclePrefab.GetComponent<Obstacle>().health;
-
         for(int i = 0; i < poolSize; i++)
         {
             GameObject obj = Instantiate(obstaclePrefab);
@@ -66,9 +68,9 @@ public class ObstacleManager : MonoBehaviour
     {
         while (true)
         {
-            spawnCount = Random.Range(spawnMinCount, spawnMaxCount);
+            curSpawnCount = Random.Range(spawnMinCount, spawnMaxCount);
 
-            for(int i = 0; i < spawnCount; i++)
+            for(int i = 0; i < curSpawnCount; i++)
             {
                 SpawnObject();
             }
@@ -147,6 +149,12 @@ public class ObstacleManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void ExplosionSound()
+    {
+        if (audioSrc.isPlaying) audioSrc.Stop();
+        audioSrc.Play();
     }
 
 }

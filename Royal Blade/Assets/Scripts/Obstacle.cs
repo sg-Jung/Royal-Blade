@@ -24,6 +24,26 @@ public class Obstacle : MonoBehaviour
         rb.AddForce(-Vector3.back * shieldKnockBackForce, ForceMode.Impulse);
     }
 
+    public void HitFromPlayer(float attackDamage)
+    {
+        health -= attackDamage;
+
+        if (health <= 0)
+        {
+            // 气惯 备泅
+            ObstacleManager obsM = ObstacleManager.Instance;
+
+            obsM.ReturnToPool(this.gameObject);
+            obsM.ExplosionSound();
+            GameManager.Instance.AddScore(obsM.obstacleScore);
+        }
+        else
+        {
+            Debug.Log("attackKnockBackForce");
+            ObstacleManager.Instance.KnockBackObstacle(0);
+        }
+    }
+
     private void OnCollisionEnter(Collision collision)
     {
         if(collision.gameObject.CompareTag("Obstacle") || collision.gameObject.CompareTag("Player"))
@@ -44,26 +64,7 @@ public class Obstacle : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            if (PlayerController.Instance.isAttack)
-            {
-                // 傍拜 贸府
-                if (!PlayerController.Instance.isRunSkill)
-                    UIManager.Instance.AttackImageFill(PlayerController.Instance.attackGageValue);
-
-                health -= PlayerController.Instance.attackDamage;
-
-                if (health <= 0)
-                {
-                    // 气惯 备泅
-                    ObstacleManager.Instance.ReturnToPool(this.gameObject);
-                }
-                else
-                {
-                    Debug.Log("attackKnockBackForce");
-                    ObstacleManager.Instance.KnockBackObstacle(0);
-                }
-            }
-            else if (PlayerController.Instance.isShield)
+            if (PlayerController.Instance.isShield)
             {
                 // 规绢 贸府
                 Debug.Log("Shield Player Trigger");

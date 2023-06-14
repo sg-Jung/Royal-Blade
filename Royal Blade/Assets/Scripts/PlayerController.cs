@@ -8,8 +8,10 @@ public class PlayerController : MonoBehaviour
     public static PlayerController Instance { get { return instance; } }
     private FSM fsm;
 
-    [Header("Player Animation")]
+    [Header("Player Animation & Audio")]
     public Animator anim;
+    public AudioSource audioSrc;
+    public AudioClip[] ac;
 
     [Header("Player Setting")]
     public BoxCollider bc;
@@ -19,28 +21,35 @@ public class PlayerController : MonoBehaviour
     [Header("Attack")]
     public float attackDamage;
     public float attackSpeed;
+    public float originAttackRange;
+    public float skillAttackRange;
+    public float attackRange;
     public float attackGageValue;
+    public float attackSkillDuration;
+    public float wholeAttackSkillDuration;
     public int attackCombo;
     public bool isAttack;
+    public bool isAttackSkill;
+    public bool attackSkill_ing;
 
     [Header("Run")]
     public float runSpeed;
-    // public float runCoolTime;
     public float runMinPower;
     public float runMaxPower;
     public float runPower;
     public float runSkillPower;
+    public float runSkillDuration;
     public bool isRun;
     public bool isRunSkill;
     public bool isGround;
 
     [Header("Shield")]
+    public float shieldCoolTime;
     public bool isShield;
 
     [Header("Attack Collider")]
     public SphereCollider sc;
     public float firstRadius;
-    public float attackRadius;
     public float shieldRadius;
 
 
@@ -69,7 +78,7 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
-        sc.radius = firstRadius;
+        firstRadius = sc.radius;
     }
 
     void Update()
@@ -77,7 +86,6 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space) && !isAttack)
         {
             Attack();
-            StartCoroutine(AttackDelay());
         }
         else if(Input.GetKeyDown(KeyCode.LeftShift) && !isRun && isGround)
         {
@@ -93,9 +101,17 @@ public class PlayerController : MonoBehaviour
     {
         if (!isAttack)
         {
-            Attack();
-            StartCoroutine(AttackDelay());
+            if (!isAttackSkill)
+                Attack();
+            else
+                AttackSkill();
+
         }
+    }
+
+    public void OnClickAttackSkillBtn()
+    {
+        StartCoroutine(IsAttackSkillDuration());
     }
 
     public void OnClickRunForwardkBtn()
@@ -109,7 +125,7 @@ public class PlayerController : MonoBehaviour
     public void OnClickRunSkillBtn()
     {
         rb.AddForce(-Vector3.back * runSkillPower, ForceMode.Impulse);
-        StartCoroutine(RunSkillDelay());
+        StartCoroutine(RunSkillDuration());
     }
 
     public void OnClickShieldkBtn()
@@ -119,10 +135,25 @@ public class PlayerController : MonoBehaviour
             Shield();
         }
     }
+   
+    void AttackSound()
+    {
+        if (audioSrc.isPlaying) audioSrc.Stop();
+        
+        audioSrc.clip = ac[0];
+        audioSrc.Play();
+    }
+
+    void AttackSkill()
+    {
+        StartCoroutine(AttackSkillDuration());
+    }
 
     void Attack()
     {
         fsm.SetState("Attack");
+        AttackSound();
+        AttackRayCast();
 
         if (attackCombo == 0)
         {
@@ -136,28 +167,101 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    IEnumerator AttackDelay()
+    void AttackRayCast()
     {
-        sc.radius = attackRadius;
-        yield return new WaitUntil(() => !isAttack);
-        sc.radius = firstRadius;
+        RaycastHit hit;
+
+        int layerMask = 1 << LayerMask.NameToLayer("Obstacle"); // Obstacle 레이어만 충돌 체크
+
+        if (Physics.Raycast(transform.position, transform.forward, out hit, attackRange, layerMask))
+        {
+            // 충돌한 오브젝트를 공격하는 코드 작성
+            GameObject targetObject = hit.collider.gameObject;
+            Debug.Log("공격 대상: " + targetObject.name);
+
+            UIManager.Instance.AttackSkillImageFill(attackGageValue);
+
+            targetObject.GetComponent<Obstacle>().HitFromPlayer(attackDamage);
+        }
+
+        Debug.DrawRay(transform.position, transform.forward * attackRange, Color.red, 0.5f);
     }
 
-    IEnumerator RunSkillDelay()
+    IEnumerator IsAttackSkillDuration()
+    {
+        isAttackSkill = true;
+
+        yield return new WaitForSeconds(wholeAttackSkillDuration);
+
+        isAttackSkill = false;
+    }
+
+    IEnumerator AttackSkillDuration()
+    {
+        attackSkill_ing = true;
+        isAttack = true;
+        UIManager.Instance.attackBtn.interactable = false;
+
+        float originAttackDamage = attackDamage;
+
+        attackDamage = ObstacleManager.Instance.maxHealth;
+        attackRange = skillAttackRange;
+
+        StartCoroutine(AttackSkillEnd());
+
+        while (attackSkill_ing)
+        {
+            AttackRayCast();
+            yield return null;
+        }
+
+        attackDamage = originAttackDamage;
+        attackRange = originAttackRange;
+    }
+
+    IEnumerator AttackSkillEnd()
+    {
+        yield return new WaitForSeconds(attackSkillDuration);
+        attackSkill_ing = false;
+        isAttack = false;
+        UIManager.Instance.attackBtn.interactable = true;
+    }
+
+    IEnumerator RunSkillDuration()
     {
         isRunSkill = true;
-        sc.radius = attackRadius;
-        isAttack = true;
 
-        yield return new WaitForSeconds(1f);
+        float originAttackDamage = attackDamage;
+        attackDamage = ObstacleManager.Instance.maxHealth;
 
+        StartCoroutine(RunSkillEnd());
+
+        while (isRunSkill)
+        {
+            AttackRayCast();
+            yield return null;
+        }
+
+        attackDamage = originAttackDamage;
+    }
+
+    IEnumerator RunSkillEnd()
+    {
+        yield return new WaitForSeconds(runSkillDuration);
         isRunSkill = false;
-        isAttack = false;
-        sc.radius = firstRadius;
+    }
+
+    void ShieldSound()
+    {
+        if (audioSrc.isPlaying) audioSrc.Stop();
+
+        audioSrc.clip = ac[1];
+        audioSrc.Play();
     }
 
     void Shield()
     {
+        ShieldSound();
         fsm.SetState("Shield");
     }
 
@@ -199,7 +303,4 @@ public class PlayerController : MonoBehaviour
             isGround = false;
         }
     }
-
-
-
 }
