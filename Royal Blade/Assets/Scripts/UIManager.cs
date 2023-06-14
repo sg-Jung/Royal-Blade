@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
@@ -10,18 +11,23 @@ public class UIManager : MonoBehaviour
 
     [Header("Button")]
     public Button attackBtn;
+    public Button attackSkillBtn;
     public Button shieldBtn;
     public Button runForwardBtn;
+    public Button runSkillBtn;
     public bool runBtnPressed;
     float runFillAmountSpeed;
     float runMinValue;
     float runMaxValue;
 
-
     [Header("Image")]
-    public Image attackImage;
-    public Image runImage;
+    public Image attackSkillImage;
+    public Image runSkillImage;
     float runImgGage = 0f;
+
+    [Header("Setting")]
+    public float runFillSpeed;
+    public float runFillRatio;
 
 
     void Awake()
@@ -41,7 +47,25 @@ public class UIManager : MonoBehaviour
     {
         runMinValue = PlayerController.Instance.runMinPower;
         runMaxValue = PlayerController.Instance.runMaxPower;
-        runFillAmountSpeed = PlayerController.Instance.runMinPower * 5;
+        runFillAmountSpeed = PlayerController.Instance.runMinPower * runFillSpeed;
+        
+    }
+
+    private void Update()
+    {
+        runForwardBtn.interactable = !PlayerController.Instance.isRun;
+        shieldBtn.interactable = !PlayerController.Instance.isShield;
+
+        ManageSkillBtn();
+    }
+
+    void ManageSkillBtn()
+    {
+        if (attackSkillImage.fillAmount == 1) attackSkillBtn.interactable = true;
+        else attackSkillBtn.interactable = false;
+
+        if (runSkillImage.fillAmount == 1) runSkillBtn.interactable = true;
+        else runSkillBtn.interactable = false;
     }
 
     public void RunBtnPressed()
@@ -58,24 +82,32 @@ public class UIManager : MonoBehaviour
         {
             tempGage += runFillAmountSpeed * Time.deltaTime;
             runImgGage = Mathf.Clamp(tempGage, runMinValue, runMaxValue);
-            targetValue = Mathf.Lerp(0, 1, runImgGage / runMaxValue);
+            targetValue = Mathf.Lerp(0, 1, (runImgGage / runMaxValue) / runFillRatio);
             yield return null;
         }
-
-        runImage.fillAmount += Mathf.Clamp01(targetValue);
-        PlayerController.Instance.runPower = tempGage;
-        Debug.Log(tempGage);
+        if (PlayerController.Instance.isGround)
+            runSkillImage.fillAmount += Mathf.Clamp01(targetValue);
     }
 
     public void RunBtnReleased()
     {
         runBtnPressed = false;
-        PlayerController.Instance.OnClickRunForwardkBtn();
+
+        if (PlayerController.Instance.isGround)
+        {
+            PlayerController.Instance.runPower = runImgGage;
+            PlayerController.Instance.OnClickRunForwardkBtn();
+        }
+    }
+
+    public void RunSkillBtnClicked()
+    {
+
     }
 
     public void AttackImageFill(float attackGageValue)
     {
-        attackImage.fillAmount = Mathf.Clamp01(attackImage.fillAmount + attackGageValue);
+        attackSkillImage.fillAmount = Mathf.Clamp01(attackSkillImage.fillAmount + attackGageValue);
     }
 
 }

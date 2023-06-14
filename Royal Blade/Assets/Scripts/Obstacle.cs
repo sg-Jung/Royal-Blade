@@ -7,6 +7,7 @@ public class Obstacle : MonoBehaviour
     [Header("Setting")]
     public Rigidbody rb;
     public BoxCollider bc;
+    public float bounciness;
     public float health;
     public float shieldKnockBackForce;
     public float attackKnockBackForce;
@@ -23,28 +24,51 @@ public class Obstacle : MonoBehaviour
         rb.AddForce(-Vector3.back * shieldKnockBackForce, ForceMode.Impulse);
     }
 
+    private void OnCollisionEnter(Collision collision)
+    {
+        if(collision.gameObject.CompareTag("Obstacle") || collision.gameObject.CompareTag("Player"))
+        {
+            rb.velocity *= (1f - bounciness);
+        }
+
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            ObstacleManager.Instance.ReturnToPool(this.gameObject);
+        }
+    }
+
+
+    // 방어 후 공격 시 방어 시에 이미 OnTriggerEnter함수가 동작해 공격이 씹히는 것 수정해야 함
+
     private void OnTriggerEnter(Collider other) // KnockBackObstacle(): 0번 -> Attack, 1번 -> Shield
     {
-        if (other.CompareTag("Player") && PlayerController.Instance.isAttack)
+        if (other.CompareTag("Player"))
         {
-            UIManager.Instance.AttackImageFill(PlayerController.Instance.attackGageValue);
-
-            health -= PlayerController.Instance.attackDamage;
-
-            if (health <= 0)
+            if (PlayerController.Instance.isAttack)
             {
-                // 폭발 구현
+                // 공격 처리
+                if (!PlayerController.Instance.isRunSkill)
+                    UIManager.Instance.AttackImageFill(PlayerController.Instance.attackGageValue);
+
+                health -= PlayerController.Instance.attackDamage;
+
+                if (health <= 0)
+                {
+                    // 폭발 구현
+                    ObstacleManager.Instance.ReturnToPool(this.gameObject);
+                }
+                else
+                {
+                    Debug.Log("attackKnockBackForce");
+                    ObstacleManager.Instance.KnockBackObstacle(0);
+                }
             }
-            else
+            else if (PlayerController.Instance.isShield)
             {
-                Debug.Log("attackKnockBackForce");
-                ObstacleManager.Instance.KnockBackObstacle(0);
+                // 방어 처리
+                Debug.Log("Shield Player Trigger");
+                ObstacleManager.Instance.KnockBackObstacle(1);
             }
-        }
-        else if(other.CompareTag("Player") && PlayerController.Instance.isShield)
-        {
-            Debug.Log("Shield Player Trigger");
-            ObstacleManager.Instance.KnockBackObstacle(1);
         }
 
     }

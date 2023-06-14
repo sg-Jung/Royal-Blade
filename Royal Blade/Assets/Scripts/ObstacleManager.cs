@@ -14,9 +14,21 @@ public class ObstacleManager : MonoBehaviour
 
     private List<GameObject> poolObjects = new List<GameObject>();
 
+    float health;
+
     [Header("Obstacle Area & Obstacle Spawn Point")]
     public BoxCollider obsArea;
     public Transform spawnPoint;
+
+    [Header("Spawn Setting")]
+    public float gridZ; // 격자의 크기
+    public float spacing; // 격자 간의 간격
+    public float spawnTime;
+    public int spawnMinCount;
+    public int spawnMaxCount;
+    public int spawnCount;
+
+    enum State { Attack, Shield }
 
     void Awake()
     {
@@ -33,11 +45,35 @@ public class ObstacleManager : MonoBehaviour
 
     void Start()
     {
-        for(int i =0; i < poolSize; i++)
+        health = obstaclePrefab.GetComponent<Obstacle>().health;
+
+        for(int i = 0; i < poolSize; i++)
         {
             GameObject obj = Instantiate(obstaclePrefab);
             obj.SetActive(false);
             poolObjects.Add(obj);
+        }
+
+        StartSpawnObstacle(); // 나중에 시작버튼을 누르면 동작하도록 구현하기
+    }
+
+    void StartSpawnObstacle()
+    {
+        StartCoroutine(SpawnObstacleCor());
+    }
+
+    IEnumerator SpawnObstacleCor()
+    {
+        while (true)
+        {
+            spawnCount = Random.Range(spawnMinCount, spawnMaxCount);
+
+            for(int i = 0; i < spawnCount; i++)
+            {
+                SpawnObject();
+            }
+
+            yield return new WaitForSeconds(spawnTime);
         }
     }
 
@@ -59,15 +95,36 @@ public class ObstacleManager : MonoBehaviour
         return obj;
     }
 
+    public void ReturnToPool(GameObject obj)
+    {
+        obj.SetActive(false);
+    }
+
     void SpawnObject()
     {
         GameObject poolObject = GetPooledObject();
+        Obstacle obs = poolObject.GetComponent<Obstacle>();
+        
+        if (obs != null)
+        {
+            obs.health = health;
+        }
 
-        if(poolObject != null)
+        if (poolObject != null)
         {
             poolObject.SetActive(true);
-            poolObject.transform.position = spawnPoint.position;
+            poolObject.transform.position = GetSpawnPosition();
         }
+    }
+
+    Vector3 GetSpawnPosition()
+    {
+        float zPos = Random.Range(0, gridZ) * spacing;
+
+        // 스폰 포인트를 기준으로 계산된 위치를 반환
+        Vector3 spawnPosition = spawnPoint.position + new Vector3(0f, 0f, zPos);
+
+        return spawnPosition;
     }
 
     public void KnockBackObstacle(int index) // index 0: attack, 1: shield
@@ -80,11 +137,11 @@ public class ObstacleManager : MonoBehaviour
             
             if(obs != null)
             {
-                if (index == 0)
+                if (index == (int)State.Attack) // attack
                 {
                     obs.AttackKnockBack();
                 }
-                else if (index == 1)
+                else if (index == (int)State.Shield) // shield
                 {
                     obs.ShieldKnockBack();
                 }

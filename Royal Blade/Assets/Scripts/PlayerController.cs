@@ -12,6 +12,7 @@ public class PlayerController : MonoBehaviour
     public Animator anim;
 
     [Header("Player Setting")]
+    public BoxCollider bc;
     public Rigidbody rb;
     public int health;
 
@@ -28,7 +29,9 @@ public class PlayerController : MonoBehaviour
     public float runMinPower;
     public float runMaxPower;
     public float runPower;
+    public float runSkillPower;
     public bool isRun;
+    public bool isRunSkill;
     public bool isGround;
 
     [Header("Shield")]
@@ -57,8 +60,7 @@ public class PlayerController : MonoBehaviour
         fsm = new FSM();
 
         fsm.AddState("Idle", new IdleState(this));
-        fsm.AddState("Attack0", new Attack0State(this));
-        fsm.AddState("Attack1", new Attack1State(this));
+        fsm.AddState("Attack", new AttackState(this));
         fsm.AddState("Shield", new ShieldState(this));
         fsm.AddState("RunForward", new RunForwardState(this));
 
@@ -104,6 +106,12 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public void OnClickRunSkillBtn()
+    {
+        rb.AddForce(-Vector3.back * runSkillPower, ForceMode.Impulse);
+        StartCoroutine(RunSkillDelay());
+    }
+
     public void OnClickShieldkBtn()
     {
         if (!isShield)
@@ -114,15 +122,15 @@ public class PlayerController : MonoBehaviour
 
     void Attack()
     {
-        if(attackCombo == 0)
+        fsm.SetState("Attack");
+
+        if (attackCombo == 0)
         {
-            fsm.SetState("Attack0");
             attackCombo = 1;
             anim.SetInteger("AttackCombo", attackCombo);
         }
         else
         {
-            fsm.SetState("Attack1");
             attackCombo = 0;
             anim.SetInteger("AttackCombo", attackCombo);
         }
@@ -131,9 +139,21 @@ public class PlayerController : MonoBehaviour
     IEnumerator AttackDelay()
     {
         sc.radius = attackRadius;
-        yield return new WaitForSeconds(1 / attackSpeed);
+        yield return new WaitUntil(() => !isAttack);
         sc.radius = firstRadius;
+    }
+
+    IEnumerator RunSkillDelay()
+    {
+        isRunSkill = true;
+        sc.radius = attackRadius;
+        isAttack = true;
+
+        yield return new WaitForSeconds(1f);
+
+        isRunSkill = false;
         isAttack = false;
+        sc.radius = firstRadius;
     }
 
     void Shield()
@@ -154,9 +174,19 @@ public class PlayerController : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        if (collision.gameObject.CompareTag("Obstacle"))
+        {
+            rb.velocity = Vector3.zero;
+
+            if (isGround && !isShield)
+            {
+                health--;
+                ObstacleManager.Instance.ReturnToPool(collision.gameObject);
+            }
+        }
+
         if (collision.gameObject.CompareTag("Ground"))
         {
-            Debug.Log("Collision Ground");
             isRun = false;
             isGround = true;
         }
@@ -169,5 +199,7 @@ public class PlayerController : MonoBehaviour
             isGround = false;
         }
     }
+
+
 
 }
