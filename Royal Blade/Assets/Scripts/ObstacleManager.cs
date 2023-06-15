@@ -15,6 +15,7 @@ public class ObstacleManager : MonoBehaviour
     private List<GameObject> poolObjects = new List<GameObject>();
 
     [Header("Obstacle Info")]
+    public ParticleSystem ps;
     public AudioSource audioSrc;
     public int obstacleScore;
     public float health;
@@ -56,7 +57,7 @@ public class ObstacleManager : MonoBehaviour
             poolObjects.Add(obj);
         }
 
-        StartSpawnObstacle(); // 나중에 시작버튼을 누르면 동작하도록 구현하기
+        StartSpawnObstacle();
     }
 
     void StartSpawnObstacle()
@@ -149,6 +150,32 @@ public class ObstacleManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void ExplosionObstacle(GameObject obj)
+    {
+        SpawnExplosionParticle(obj);
+        ReturnToPool(obj);
+        ExplosionSound();
+        GameManager.Instance.AddScore(obstacleScore);
+        ItemManager.Instance.AddRandomItem();
+    }
+
+    public void SpawnExplosionParticle(GameObject obj)
+    {
+        ParticleSystem explosionPs = Instantiate(ps);
+        explosionPs.transform.position = obj.transform.position;
+        explosionPs.transform.rotation = Quaternion.identity;
+
+        StartCoroutine(ExplosionPsCor(explosionPs));
+    }
+
+    IEnumerator ExplosionPsCor(ParticleSystem ps)
+    {
+        ps.Play();
+        yield return new WaitUntil(() => ps.isPlaying == false);
+        ps.Stop();
+        Destroy(ps.gameObject);
     }
 
     public void ExplosionSound()

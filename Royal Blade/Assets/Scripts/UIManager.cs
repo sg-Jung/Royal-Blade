@@ -3,12 +3,23 @@ using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
 
 public class UIManager : MonoBehaviour
 {
     private static UIManager instance;
     public static UIManager Instance { get { return instance; } }
+
+    [Header("Top")]
+    public TextMeshProUGUI scoreText;
+    public TextMeshProUGUI moneyText;
+    public TextMeshProUGUI infoText;
+
+    [Header("Canvas")]
+    public GameObject gamePlayCanvas;
+    public GameObject settingCanvas;
 
     [Header("Button")]
     public Button attackBtn;
@@ -20,6 +31,9 @@ public class UIManager : MonoBehaviour
     float runFillAmountSpeed;
     float runMinValue;
     float runMaxValue;
+
+    [Header("Text")]
+    public TextMeshProUGUI settingScoreText;
 
     [Header("Image")]
     public Image shieldImage;
@@ -62,11 +76,45 @@ public class UIManager : MonoBehaviour
 
     void ManageSkillBtn()
     {
-        if (attackSkillImage.fillAmount == 1) attackSkillBtn.interactable = true;
-        else attackSkillBtn.interactable = false;
+        if (attackSkillImage.fillAmount == 1)
+        {
+            attackSkillBtn.interactable = true;
+        }
+        else
+        {
+            attackSkillBtn.interactable = false;
+        }
 
-        if (runSkillImage.fillAmount == 1) runSkillBtn.interactable = true;
-        else runSkillBtn.interactable = false;
+        if (runSkillImage.fillAmount == 1)
+        {
+            runSkillBtn.interactable = true;
+        }
+        else
+        {
+            runSkillBtn.interactable = false;
+        }
+    }
+
+
+    public void ReStartBtnClicked()
+    {
+        Time.timeScale = 1f;
+        Destroy(Manager.Instance.gameObject);
+        Destroy(PlayerController.Instance.gameObject);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    public void SettingBtnClicked()
+    {
+        Time.timeScale = 0f;
+        settingScoreText.text = GameManager.Instance.curScore.ToString();
+        gamePlayCanvas.SetActive(false);
+        settingCanvas.SetActive(true);
+    }
+
+    public void QuitBtnClicked()
+    {
+        Application.Quit();
     }
 
     public void RunBtnPressed()
@@ -104,6 +152,7 @@ public class UIManager : MonoBehaviour
     public void RunSkillBtnClicked()
     {
         PlayerController.Instance.OnClickRunSkillBtn();
+        runSkillImage.fillAmount = 0f;
     }
 
     public void AttackSkillBtnClicked()
@@ -168,4 +217,13 @@ public class UIManager : MonoBehaviour
         if (attackSkillImage.fillAmount == 1) attackSkillBtn.interactable = true;
     }
 
+    public void ChangeScoreText()
+    {
+        scoreText.text = GameManager.Instance.curScore.ToString();
+    }
+
+    public void ChangeMoneyText()
+    {
+        moneyText.text = GameManager.Instance.curMoney.ToString();
+    }
 }

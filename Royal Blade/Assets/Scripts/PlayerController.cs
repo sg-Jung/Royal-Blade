@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,9 +17,15 @@ public class PlayerController : MonoBehaviour
     [Header("Player Setting")]
     public BoxCollider bc;
     public Rigidbody rb;
-    public int health;
+    public Renderer render;
+    public Color blinkColor;
+    public float blinkDuration;
+
+    private Color originPlayerColor;
 
     [Header("Attack")]
+    public ParticleSystem attackParticle;
+    public ParticleSystem attackSkillParticle;
     public float attackDamage;
     public float attackSpeed;
     public float originAttackRange;
@@ -50,6 +57,7 @@ public class PlayerController : MonoBehaviour
     [Header("Attack Collider")]
     public SphereCollider sc;
     public float firstRadius;
+    public float attackRadius;
     public float shieldRadius;
 
 
@@ -70,6 +78,7 @@ public class PlayerController : MonoBehaviour
 
         fsm.AddState("Idle", new IdleState(this));
         fsm.AddState("Attack", new AttackState(this));
+        fsm.AddState("AttackSkill", new AttackSkillState(this));
         fsm.AddState("Shield", new ShieldState(this));
         fsm.AddState("RunForward", new RunForwardState(this));
 
@@ -79,13 +88,14 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         firstRadius = sc.radius;
+        originPlayerColor = render.material.color;
     }
 
-    void Update()
+    /*void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space) && !isAttack)
         {
-            Attack();
+            BaseAttack();
         }
         else if(Input.GetKeyDown(KeyCode.LeftShift) && !isRun && isGround)
         {
@@ -95,14 +105,14 @@ public class PlayerController : MonoBehaviour
         {
             Shield();
         }
-    }
+    }*/
 
     public void OnClickAttackBtn()
     {
         if (!isAttack)
         {
             if (!isAttackSkill)
-                Attack();
+                BaseAttack();
             else
                 AttackSkill();
 
@@ -111,6 +121,8 @@ public class PlayerController : MonoBehaviour
 
     public void OnClickAttackSkillBtn()
     {
+        StopGameForSkillStart();
+        ChangeBackGroundForSkill(wholeAttackSkillDuration);
         StartCoroutine(IsAttackSkillDuration());
     }
 
@@ -125,6 +137,9 @@ public class PlayerController : MonoBehaviour
     public void OnClickRunSkillBtn()
     {
         rb.AddForce(-Vector3.back * runSkillPower, ForceMode.Impulse);
+
+        StopGameForSkillStart();
+        ChangeBackGroundForSkill(runSkillDuration);
         StartCoroutine(RunSkillDuration());
     }
 
@@ -134,6 +149,15 @@ public class PlayerController : MonoBehaviour
         {
             Shield();
         }
+    }
+    void StopGameForSkillStart()
+    {
+        GameManager.Instance.StopGameForSkill();
+    }
+
+    void ChangeBackGroundForSkill(float skillDuration)
+    {
+        CameraController.Instance.ChangeCameraBackGroundForSkill(skillDuration);
     }
    
     void AttackSound()
@@ -146,14 +170,15 @@ public class PlayerController : MonoBehaviour
 
     void AttackSkill()
     {
+        fsm.SetState("AttackSkill");
         StartCoroutine(AttackSkillDuration());
     }
 
-    void Attack()
+    void BaseAttack()
     {
         fsm.SetState("Attack");
         AttackSound();
-        AttackRayCast();
+        AttackOverlap();
 
         if (attackCombo == 0)
         {
@@ -167,33 +192,55 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    void AttackOverlap()
+    {
+        int layerMask = 1 << LayerMask.NameToLayer("Obstacle");
+        Collider[] colliders = Physics.OverlapSphere(sc.bounds.center, attackRadius, layerMask);
+
+        if(colliders != null)
+            UIManager.Instance.AttackSkillImageFill(attackGageValue);
+
+        foreach (Collider collider in colliders)
+        {
+            Obstacle obs = collider.GetComponent<Obstacle>();
+            obs.HitFromPlayer(attackDamage);
+        }
+    }
+
     void AttackRayCast()
     {
         RaycastHit hit;
 
         int layerMask = 1 << LayerMask.NameToLayer("Obstacle"); // Obstacle 레이어만 충돌 체크
+        Vector3 pos = transform.position + new Vector3(0f, 0.3f, 0f);
 
-        if (Physics.Raycast(transform.position, transform.forward, out hit, attackRange, layerMask))
+        if (Physics.Raycast(pos, transform.forward, out hit, attackRange, layerMask))
         {
             // 충돌한 오브젝트를 공격하는 코드 작성
             GameObject targetObject = hit.collider.gameObject;
-            Debug.Log("공격 대상: " + targetObject.name);
-
             UIManager.Instance.AttackSkillImageFill(attackGageValue);
 
             targetObject.GetComponent<Obstacle>().HitFromPlayer(attackDamage);
         }
 
-        Debug.DrawRay(transform.position, transform.forward * attackRange, Color.red, 0.5f);
+        Debug.DrawRay(pos, transform.forward * attackRange, Color.red, 0.5f);
     }
 
     IEnumerator IsAttackSkillDuration()
     {
-        isAttackSkill = true;
+        attackSkillParticle.gameObject.SetActive(true);
+        
+        float time = 0f;
 
-        yield return new WaitForSeconds(wholeAttackSkillDuration);
+        while (time < wholeAttackSkillDuration)
+        {
+            isAttackSkill = true;
+            time += Time.deltaTime;
+            yield return null;
+        }
 
         isAttackSkill = false;
+        attackSkillParticle.gameObject.SetActive(false);
     }
 
     IEnumerator AttackSkillDuration()
@@ -207,6 +254,7 @@ public class PlayerController : MonoBehaviour
         attackDamage = ObstacleManager.Instance.maxHealth;
         attackRange = skillAttackRange;
 
+        CameraShake(attackSkillDuration);
         StartCoroutine(AttackSkillEnd());
 
         while (attackSkill_ing)
@@ -225,6 +273,7 @@ public class PlayerController : MonoBehaviour
         attackSkill_ing = false;
         isAttack = false;
         UIManager.Instance.attackBtn.interactable = true;
+        anim.SetBool("IsAttackSkill", false);
     }
 
     IEnumerator RunSkillDuration()
@@ -234,6 +283,7 @@ public class PlayerController : MonoBehaviour
         float originAttackDamage = attackDamage;
         attackDamage = ObstacleManager.Instance.maxHealth;
 
+        CameraShake(runSkillDuration);
         StartCoroutine(RunSkillEnd());
 
         while (isRunSkill)
@@ -249,6 +299,11 @@ public class PlayerController : MonoBehaviour
     {
         yield return new WaitForSeconds(runSkillDuration);
         isRunSkill = false;
+    }
+
+    void CameraShake(float duration)
+    {
+        CameraController.Instance.CameraShake(duration);
     }
 
     void ShieldSound()
@@ -276,6 +331,35 @@ public class PlayerController : MonoBehaviour
         fsm.SetState("Idle");
     }
 
+    void TakeDamage()
+    {
+        GameManager.Instance.LossHeart();
+        StartCoroutine(BlinkEffect());
+    }
+
+    IEnumerator BlinkEffect()
+    {
+        // 깜빡이는 효과를 주기 위해 일정 시간 동안 반복
+        float elapsedTime = 0f;
+
+        while (elapsedTime < blinkDuration)
+        {
+            // 깜빡이는 색상으로 변경
+            render.material.color = blinkColor;
+
+            // 대기
+            yield return new WaitForSeconds(blinkDuration / 2f);
+
+            // 원래 색상으로 변경
+            render.material.color = originPlayerColor;
+
+            // 대기
+            yield return new WaitForSeconds(blinkDuration / 2f);
+
+            elapsedTime += blinkDuration;
+        }
+    }
+
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("Obstacle"))
@@ -284,7 +368,7 @@ public class PlayerController : MonoBehaviour
 
             if (isGround && !isShield)
             {
-                health--;
+                TakeDamage();
                 ObstacleManager.Instance.ReturnToPool(collision.gameObject);
             }
         }

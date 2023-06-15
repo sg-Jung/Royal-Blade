@@ -5,6 +5,7 @@ using UnityEngine;
 public class Obstacle : MonoBehaviour
 {
     [Header("Setting")]
+    public ParticleSystem ps;
     public Rigidbody rb;
     public BoxCollider bc;
     public float bounciness;
@@ -31,11 +32,7 @@ public class Obstacle : MonoBehaviour
         if (health <= 0)
         {
             // 폭발 구현
-            ObstacleManager obsM = ObstacleManager.Instance;
-
-            obsM.ReturnToPool(this.gameObject);
-            obsM.ExplosionSound();
-            GameManager.Instance.AddScore(obsM.obstacleScore);
+            ObstacleManager.Instance.ExplosionObstacle(this.gameObject);
         }
         else
         {
@@ -57,9 +54,6 @@ public class Obstacle : MonoBehaviour
         }
     }
 
-
-    // 방어 후 공격 시 방어 시에 이미 OnTriggerEnter함수가 동작해 공격이 씹히는 것 수정해야 함
-
     private void OnTriggerEnter(Collider other) // KnockBackObstacle(): 0번 -> Attack, 1번 -> Shield
     {
         if (other.CompareTag("Player"))
@@ -67,7 +61,6 @@ public class Obstacle : MonoBehaviour
             if (PlayerController.Instance.isShield)
             {
                 // 방어 처리
-                Debug.Log("Shield Player Trigger");
                 ObstacleManager.Instance.KnockBackObstacle(1);
             }
         }

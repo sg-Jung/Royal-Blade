@@ -45,6 +45,8 @@ public class AttackState : State
         _playerController.anim.SetBool("IsAttack", true);
         _playerController.anim.SetFloat("AttackSpeed", _playerController.attackSpeed);
         _playerController.isAttack = true;
+        _playerController.sc.radius = _playerController.attackRadius;
+        _playerController.attackParticle.Play();
     }
 
     public override void Update()
@@ -55,6 +57,30 @@ public class AttackState : State
     public override void Exit()
     {
         _playerController.isAttack = false;
+        _playerController.sc.radius = _playerController.firstRadius;
+        _playerController.attackParticle.Stop();
+    }
+}
+
+public class AttackSkillState : State
+{
+    public AttackSkillState(PlayerController playerController) : base(playerController) { }
+
+    public override void Enter()
+    {
+        _playerController.anim.SetBool("IsAttackSkill", true);
+        _playerController.isAttackSkill = true;
+    }
+
+    public override void Update()
+    {
+
+    }
+
+    public override void Exit()
+    {
+        _playerController.anim.SetBool("IsAttackSkill", false);
+        _playerController.isAttackSkill = false;
     }
 }
 
